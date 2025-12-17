@@ -1,0 +1,169 @@
+﻿@using System.Linq
+@model IEnumerable<Prof.Models.Tarea>
+@{
+    ViewBag.Title = "Gestor de Tareas";
+    var tareasPorVencer = ViewBag.TareasPorVencer as List<Prof.Models.TareaPorVencer>;
+}
+
+<div class="container mt-4">
+    <h2><i class="fas fa-tasks"></i> Gestor de Tareas</h2>
+    <hr />
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Mensaje"]
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+    }
+
+    @if (tareasPorVencer != null && tareasPorVencer.Count > 0)
+    {
+        <div class="alert alert-warning">
+            <h5><i class="fas fa-exclamation-triangle"></i> Tareas Próximas a Vencer</h5>
+            <ul class="mb-0">
+                @foreach (var tarea in tareasPorVencer)
+                {
+                    <li>
+                        <strong>@tarea.Nombre</strong> - Vence en @tarea.DiasRestantes día(s)
+                        (@tarea.FechaLimite.ToString("dd/MM/yyyy"))
+                        <span class="badge badge-@(tarea.Prioridad == Prof.Models.PrioridadTarea.Alta ? "danger" : tarea.Prioridad == Prof.Models.PrioridadTarea.Media ? "warning" : "secondary")">
+                            @tarea.Prioridad
+                        </span>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <a href="@Url.Action("Crear")" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nueva Tarea
+            </a>
+            <a href="@Url.Action("Reportes")" class="btn btn-info">
+                <i class="fas fa-chart-bar"></i> Ver Reportes
+            </a>
+        </div>
+        <div class="col-md-6">
+            <div class="btn-group float-right">
+                <a href="@Url.Action("Index", new { filtro = "todas" })"
+                   class="btn btn-@(ViewBag.Filtro == "todas" ? "primary" : "outline-primary")">
+                    Todas
+                </a>
+                <a href="@Url.Action("Index", new { filtro = "pendientes" })"
+                   class="btn btn-@(ViewBag.Filtro == "pendientes" ? "primary" : "outline-primary")">
+                    Pendientes
+                </a>
+                <a href="@Url.Action("Index", new { filtro = "completadas" })"
+                   class="btn btn-@(ViewBag.Filtro == "completadas" ? "primary" : "outline-primary")">
+                    Completadas
+                </a>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown">
+                        Prioridad
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="@Url.Action("Index", new { filtro = "alta" })">Alta</a>
+                        <a class="dropdown-item" href="@Url.Action("Index", new { filtro = "media" })">Media</a>
+                        <a class="dropdown-item" href="@Url.Action("Index", new { filtro = "baja" })">Baja</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <table class="table table-hover table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Fecha Límite</th>
+                    <th>Estado</th>
+                    <th>Prioridad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    var diasRestantes = (item.FechaLimite - DateTime.Now).Days;
+                    var claseFilaVencida = item.Estado == Prof.Models.EstadoTarea.Pendiente && diasRestantes < 0 ? "table-danger" : "";
+                    var claseFilaPorVencer = item.Estado == Prof.Models.EstadoTarea.Pendiente && diasRestantes <= 3 && diasRestantes >= 0 ? "table-warning" : "";
+
+                    <tr class="@claseFilaVencida @claseFilaPorVencer">
+                        <td>
+                            <strong>@item.Nombre</strong>
+                            @if (diasRestantes < 0 && item.Estado == Prof.Models.EstadoTarea.Pendiente)
+                            {
+                                <span class="badge badge-danger">Vencida</span>
+                            }
+                        </td>
+                        <td>@(string.IsNullOrEmpty(item.Descripcion) ? "-" : item.Descripcion)</td>
+                        <td>@item.FechaLimite.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @if (item.Estado == Prof.Models.EstadoTarea.Pendiente)
+                            {
+                                <button class="btn btn-sm btn-warning btn-estado" data-id="@item.Id">
+                                    <i class="fas fa-clock"></i> Pendiente
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-success btn-estado" data-id="@item.Id">
+                                    <i class="fas fa-check"></i> Completada
+                                </button>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge badge-@(item.Prioridad == Prof.Models.PrioridadTarea.Alta ? "danger" : item.Prioridad == Prof.Models.PrioridadTarea.Media ? "warning" : "secondary")">
+                                @item.Prioridad
+                            </span>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("Editar", new { id = item.Id })" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="@Url.Action("Eliminar", new { id = item.Id })" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No hay tareas para mostrar.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.btn-estado').click(function () {
+                var id = $(this).data('id');
+                $.ajax({
+                    url: '@Url.Action("CambiarEstado")',
+                    type: 'POST',
+                    data: { id: id },
+                    success: function (response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.mensaje);
+                        }
+                    },
+                    error: function () {
+                        alert('Error al cambiar el estado');
+                    }
+                });
+            });
+        });
+    </script>
+}

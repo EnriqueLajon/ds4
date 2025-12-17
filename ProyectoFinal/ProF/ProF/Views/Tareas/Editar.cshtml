@@ -1,0 +1,79 @@
+﻿@model Prof.Models.Tarea
+@{
+    ViewBag.Title = "Editar Tarea";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="fas fa-edit"></i> Editar Tarea</h4>
+                </div>
+                <div class="card-body">
+                    @using (Html.BeginForm("Editar", "Tareas", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.Id)
+                        @Html.HiddenFor(m => m.FechaCreacion)
+                        @Html.HiddenFor(m => m.FechaCompletada)
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Nombre, new { @class = "font-weight-bold" })
+                            @Html.TextBoxFor(m => m.Nombre, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.Nombre, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Descripcion, new { @class = "font-weight-bold" })
+                            @Html.TextAreaFor(m => m.Descripcion, new { @class = "form-control", rows = "3" })
+                            @Html.ValidationMessageFor(m => m.Descripcion, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.FechaLimite, new { @class = "font-weight-bold" })
+                            @Html.TextBoxFor(m => m.FechaLimite, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                            @Html.ValidationMessageFor(m => m.FechaLimite, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.Estado, new { @class = "font-weight-bold" })
+                                    @Html.DropDownListFor(m => m.Estado, (SelectList)ViewBag.Estados, new { @class = "form-control" })
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.Prioridad, new { @class = "font-weight-bold" })
+                                    @Html.DropDownListFor(m => m.Prioridad, (SelectList)ViewBag.Prioridades, new { @class = "form-control" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <small>
+                                <strong>Creada:</strong> @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                            </small>
+                        </div>
+
+                        <hr />
+
+                        <div class="form-group text-right">
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
