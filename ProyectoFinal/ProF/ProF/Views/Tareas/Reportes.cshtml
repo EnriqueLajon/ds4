@@ -1,0 +1,181 @@
+﻿@using Prof.Models
+@using System.Linq
+@{
+    ViewBag.Title = "Reportes";
+    var stats = ViewBag.Estadisticas as Estadisticas;
+    var tareasPorVencer = ViewBag.TareasPorVencer as List<TareaPorVencer>;
+    var todasTareas = ViewBag.TodasTareas as List<Tarea>;
+}
+
+<div class="container mt-4">
+    <h2><i class="fas fa-chart-bar"></i> Reportes</h2>
+    <hr />
+
+    <div class="mb-3">
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+        
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5>Total de Tareas</h5>
+                    <h2 class="display-4">@stats.TotalTareas</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h5>Pendientes</h5>
+                    <h2 class="display-4">@stats.TareasPendientes</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h5>Completadas</h5>
+                    <h2 class="display-4">@stats.TareasCompletadas</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h5>Alta Prioridad</h5>
+                    <h2 class="display-4">@stats.TareasAltaPrioridad</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (tareasPorVencer != null && tareasPorVencer.Count > 0)
+    {
+        <div class="card border-warning mb-4">
+            <div class="card-header bg-warning text-white">
+                <h4><i class="fas fa-exclamation-triangle"></i> Tareas Próximas a Vencer</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Fecha Límite</th>
+                            <th>Días Restantes</th>
+                            <th>Prioridad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tarea in tareasPorVencer)
+                        {
+                            <tr>
+                                <td>@tarea.Nombre</td>
+                                <td>@tarea.FechaLimite.ToString("dd/MM/yyyy")</td>
+                                <td><span class="badge badge-warning">@tarea.DiasRestantes día(s)</span></td>
+                                <td>
+                                    <span class="badge badge-@(tarea.Prioridad == PrioridadTarea.Alta ? "danger" : tarea.Prioridad == PrioridadTarea.Media ? "warning" : "secondary")">
+                                        @tarea.Prioridad
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5>Progreso General</h5>
+                </div>
+                <div class="card-body">
+                    @if (stats.TotalTareas > 0)
+                    {
+                        var porcentaje = (stats.TareasCompletadas * 100.0 / stats.TotalTareas);
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-success" style="width: @porcentaje%">
+                                @porcentaje.ToString("0.00")%
+                            </div>
+                        </div>
+                        <p class="mt-3 text-center">
+                            <strong>@stats.TareasCompletadas</strong> de <strong>@stats.TotalTareas</strong> completadas
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5>Distribución por Prioridad</h5>
+                </div>
+                <div class="card-body">
+                    @if (todasTareas != null && todasTareas.Count > 0)
+                    {
+                        var alta = todasTareas.Count(t => t.Prioridad == PrioridadTarea.Alta);
+                        var media = todasTareas.Count(t => t.Prioridad == PrioridadTarea.Media);
+                        var baja = todasTareas.Count(t => t.Prioridad == PrioridadTarea.Baja);
+
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between">
+                                Alta Prioridad
+                                <span class="badge badge-danger">@alta</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                Media Prioridad
+                                <span class="badge badge-warning">@media</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                Baja Prioridad
+                                <span class="badge badge-secondary">@baja</span>
+                            </li>
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (todasTareas != null)
+    {
+        var vencidas = todasTareas.Where(t => t.Estado == EstadoTarea.Pendiente && t.FechaLimite < DateTime.Now).ToList();
+        if (vencidas.Count > 0)
+        {
+            <div class="card border-danger mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h4><i class="fas fa-times-circle"></i> Tareas Vencidas</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Fecha Límite</th>
+                                <th>Días Vencidos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tarea in vencidas)
+                            {
+                                var dias = (DateTime.Now - tarea.FechaLimite).Days;
+                                <tr class="table-danger">
+                                    <td>@tarea.Nombre</td>
+                                    <td>@tarea.FechaLimite.ToString("dd/MM/yyyy")</td>
+                                    <td><span class="badge badge-danger">@dias día(s)</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
